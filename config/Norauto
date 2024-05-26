@@ -1,0 +1,16 @@
+# rul_enable={rul_enable}; // Mode test enable [true/false]
+! manager_passwd=N0rauto@Mag314@AP1; // AP web login password eg (N0rauto@Mag98@AP1)
+
+ew_ipaddr=norauto-prd.hanshowcloud.net; // ESL-Working IP addresse
+! ew_port=44021; // ESL-Working port eg (41021)
+ew_ssl=true; // ESL-Working SSL enable [true/false]
+
+net_dhcp=false; // AP DHCP enable [true/false]
+! net_ipaddr=10.3.14.84; // AP IP addresse eg (192.168.240.110-111) (if DHCP enable, ignore) 
+net_netmask=255.255.255.0; // AP NetMask (if DHCP enable, ignore)
+! net_router=10.3.14.10; // AP Gateway (if DHCP enable, ignore)
+! net_dns1=10.3.14.2; // AP DNS1 (if DHCP enable, ignore)
+net_dns2=10.131.17.66; // AP DNS2 (if DHCP enable, ignore)
+
+! descript=Colmar AP A-Z; // AP Description eg (Colmar AP A-Z)
+ew_udp=false; // ESL-Working Auto search enable [true/false]
