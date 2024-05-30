@@ -18,3 +18,13 @@ final step
 
 ### FUTURE
 Auto complete with excel projet
+
+进powershell再做之后的这些操作
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser #更改执行策略
+删除旧的虚拟环境
+Remove-Item -Recurse -Force myenv
+新建
+python -m venv env310
+激活环境
+.\myenv\Scripts\Activate
+根据requirements.txt中的配置环境

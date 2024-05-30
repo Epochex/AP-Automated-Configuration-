@@ -1,5 +1,12 @@
 from hashlib import md5
 import re, os
+from utils import *
+
+import os
+
+def clear_arp_cache():
+    os.system('arp -d')
+    print("ARP cache cleared")
 
 
 TRANSLATION = {
@@ -34,6 +41,7 @@ Veuillez modifier le symbole au début de chaque ligne selon les besoins.
 # signifie que l'ap est configuré par défaut et n'a pas besoin d'être modifié ou affiché dans le logiciel
 ! est la configuration qui doit être modifiée, et qui doit être configurée et affichée dans le logiciel
 Les configurations qui ne commencent pas par un symbole spécial sont uniquement affichées dans le logiciel.'''
+
 
 def encrypt_md5(s):
     # 创建md5对象

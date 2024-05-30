@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\REN\Desktop\scripts\AP-Automated-Configuration-\env310
+set VIRTUAL_ENV=C:\Users\crayo\Desktop\blog\AP-Automated-Configuration-\env310
 
 if not defined PROMPT set PROMPT=$P$G
 

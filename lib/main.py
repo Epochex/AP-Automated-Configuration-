@@ -65,7 +65,7 @@ class Ui_MainWindow(object):
         self.selectBox.currentIndexChanged.connect(self.grpChange)
         self.alert = QLabel(self.centralwidget)
         self.alert.setGeometry(QRect(30, 580, 511, 24))
-        self.alert.setObjectName("disableConnection")
+        self.config = QListWidget(self.centralwidget)  # 确保初始化 self.config
         self.config = QListWidget(self.centralwidget)
         self.config.setGeometry(QRect(550, 180, 340, 380))
         self.config.setObjectName("configInfo")
@@ -487,8 +487,8 @@ class Ui_MainWindow(object):
             CONFIG.append(f'cgi -a descript="{description}"')
 
 
-    def launchPopup(self, ap_ip, ap_mac):
-############################################ ####################################################
+    def launchPopup(self):
+        #########################################################
         selected_indexes = self.tableWidget.selectionModel().selectedRows()
         if not selected_indexes:
             self.msgBox.setIcon(QMessageBox.Warning)
@@ -497,52 +497,54 @@ class Ui_MainWindow(object):
             self.msgBox.setStandardButtons(QMessageBox.Ok)
             self.msgBox.exec()
             return
-            # 获取用户输入的新 IP 和描述
-    new_ip_range, ok = QInputDialog.getText(
-        self, "New IP Range", "Enter new IP range (e.g., 10.32.26.57-59):", QLineEdit.Normal)
-    if not ok or not new_ip_range:
-        return
 
-    new_description, ok = QInputDialog.getText(
-        self, "New Description", "Enter new description (e.g., ITM AP A-D):", QLineEdit.Normal)
-    if not ok or not new_description:
-        return
+        # 获取用户输入的新 IP 和描述
+        new_ip_range, ok = QInputDialog.getText(
+            self, "New IP Range", "Enter new IP range (e.g., 10.32.26.57-59):", QLineEdit.Normal)
+        if not ok or not new_ip_range:
+            return
 
-    # 解析 IP 范围
-    ip_base, ip_range = new_ip_range.rsplit('.', 1)
-    ip_start, ip_end = map(int, ip_range.split('-'))
+        new_description, ok = QInputDialog.getText(
+            self, "New Description", "Enter new description (e.g., ITM AP A-D):", QLineEdit.Normal)
+        if not ok or not new_description:
+            return
 
-    # 解析描述
-    if '-' in new_description:
-        desc_base, desc_range = new_description.rsplit(' ', 1)
-        desc_start, desc_end = desc_range.split('-')
-        desc_letters = [chr(i) for i in range(ord(desc_start), ord(desc_end) + 1)]
-    else:
-        desc_base = new_description
-        desc_letters = [None] * len(selected_indexes)
+        # 解析 IP 范围
+        ip_base, ip_range = new_ip_range.rsplit('.', 1)
+        ip_start, ip_end = map(int, ip_range.split('-'))
 
-    # 为选中的 AP 分配新配置
-    for i, index in enumerate(selected_indexes):
-        ip = f"{ip_base}.{ip_start + i}"
-        desc = f"{desc_base} {desc_letters[i]}" if desc_letters[i] else desc_base
-        row = index.row()
-        self.model.setData(self.model.index(row, 1), ip)
-        self.model.setData(self.model.index(row, 2), desc)
+        # 解析描述
+        if '-' in new_description:
+            desc_base, desc_range = new_description.rsplit(' ', 1)
+            desc_start, desc_end = desc_range.split('-')
+            desc_letters = [chr(i) for i in range(ord(desc_start), ord(desc_end) + 1)]
+        else:
+            desc_base = new_description
+            desc_letters = [None] * len(selected_indexes)
 
-        # 更新配置
-        CONFIG.append(f'cgi -a net_ipaddr={ip}')
-        CONFIG.append(f'cgi -a descript="{desc}"')
+        # 为选中的 AP 分配新配置
+        for i, index in enumerate(selected_indexes):
+            ip = f"{ip_base}.{ip_start + i}"
+            desc = f"{desc_base} {desc_letters[i]}" if desc_letters[i] else desc_base
+            row = index.row()
+            self.model.setData(self.model.index(row, 1), ip)
+            self.model.setData(self.model.index(row, 2), desc)
 
-    # 应用配置到选中的 AP
-    for index in selected_indexes:
-        ip = self.model.data(self.model.index(index.row(), 1))
-        ap_mac = self.model.data(self.model.index(index.row(), 2))
-        self.apply_config(ip, ap_mac)
+            # 更新配置
+            CONFIG.append(f'cgi -a net_ipaddr={ip}')
+            CONFIG.append(f'cgi -a descript="{desc}"')
 
-    ##########################################################################
+        # 应用配置到选中的 AP
+        for index in selected_indexes:
+            ip = self.model.data(self.model.index(index.row(), 1))
+            ap_mac = self.model.data(self.model.index(index.row(), 2))
+            self.apply_config(ip, ap_mac)
+
+
+        ##########################################################################
     def apply_config(self, ap_ip, ap_mac):
         print(ap_ip,ap_mac)
-        clear_arp_cache()  # 清楚arp缓存
+        clear_arp_cache()  # 清除arp缓存
         global GRP_CONFIG, CONFIG
         if GRP_CONFIG != "DEFAULT":
             CONFIG = get_file_config(f"config/{GRP_CONFIG}")
