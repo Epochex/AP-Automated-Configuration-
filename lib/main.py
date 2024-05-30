@@ -10,8 +10,12 @@ from PyQt5.QtWidgets import QWidget, QTableView, QPushButton, QComboBox, QLabel,
 import paramiko
 import sys
 import os
+import re
 from subprocess import Popen
 from time import sleep
+
+
+import psutil #vpn检测库
 
 sys.path.append(os.path.dirname(__file__))
 from utils import *
@@ -22,6 +26,23 @@ CONFIG = []
 VPN = False
 df = ''
 IP_LIST = []
+
+
+def is_vpn_connected():
+    adapters = psutil.net_if_addrs()
+    gateways = psutil.net_if_stats()
+    
+    for adapter_name, adapter_info in adapters.items():
+        has_default_gateway = False
+        for addr in adapter_info:
+            if addr.family == psutil.AF_INET:  # 只检查 IPv4 地址
+                ip_address = addr.address
+                netmask = addr.netmask
+                if netmask == "255.255.255.255" and ip_address != "127.0.0.1": #检查IPv4地址并排除本地回环地址,因为vpn的地址都是定死的改不了一点，所以子网掩码必定为4x255
+                    return True
+                # if gateways[adapter_name].isup and not gateways[adapter_name].isloopback:  # 检查是否有默认网关，vpn没有，自己连的会有
+                #     has_default_gateway = True
+    return False
 
 
 class Ui_MainWindow(object):
@@ -37,7 +58,7 @@ class Ui_MainWindow(object):
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QRect(700, 40, 75, 24))
         self.pushButton.setObjectName("pushButton")
-        self.selectBox = QComboBox(self.centralwidget)
+        self.selectBox = QComboBox(self.centralwidget) 
         self.selectBox.setGeometry(QRect(688, 80, 100, 24))
         self.selectBox.setObjectName("selectBox")
         self.configButton = QPushButton(self.centralwidget)
@@ -99,10 +120,32 @@ class Ui_MainWindow(object):
         QMetaObject.connectSlotsByName(MainWindow)
 
         self.slotAdd()
+    
+
+
+    def slotAdd(self):
+        self.pushButton.setEnabled(False)
+        global VPN
+        VPN = is_vpn_connected()  # 检测VPN连接
+        if VPN:
+            self.msgBox.setIcon(QMessageBox().Warning)
+            self.msgBox.setText(f"Please disable all your VPN connections!")
+            self.msgBox.setWindowTitle("Error")
+            self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
+            self.msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = self.msgBox.exec()
+            if returnValue == QMessageBox.Ok:
+                self.pushButton.setEnabled(True)
+                return
+        clear_arp_cache()  # 清除 ARP 缓存
+        self.getAP = GetApTheard()
+        self.getAP._sum.connect(self.update_tab)
+        self.getAP.start()
+
 
     def processtrigger(self, action):
         if action.text() == "Detail":
-            r = self.tableWidget.selectionModel().selectedRows()
+            r = self.tableWidget.selectionModel().selectedRows() # 获取当前选中的行
             if r:
                 index_ip = self.tableWidget.model().index(self.tableWidget.currentIndex().row(), 0)
                 index_mac = self.tableWidget.model().index(index_ip.row(), 1)
@@ -444,9 +487,10 @@ class Ui_MainWindow(object):
             self.config.addItem("Description: None")
             self.config.setStyleSheet("color: red;")
         if description:
+            # 使用双引号包裹描述字符串
             self.config.addItem("Description: " + description)
             self.config.setStyleSheet("color: red;")
-            CONFIG.append(f"cgi -a descript='{description}'")
+            CONFIG.append(f'cgi -a descript="{description}"')
 
     def launchPopup(self, ap_ip, ap_mac):
         print(ap_ip,ap_mac)
