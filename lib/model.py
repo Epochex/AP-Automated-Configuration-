@@ -42,24 +42,35 @@ def clear_arp_cache():
 
 def get_network_interfaces():
     interfaces = []
+    #获取所有网络接口的名称（别名）
     command = 'powershell "Get-NetIPAddress | Select-Object -ExpandProperty InterfaceAlias"'
+    
+    # 使用 os.popen 执行 PowerShell 命令，并获取命令输出的结果
     with os.popen(command) as res:
         for line in res:
-            line = line.strip()
-            if line and line not in interfaces:  # Ensure no duplicates
-                interfaces.append(line)
-    return interfaces
+            line = line.strip()  # 去除每行的首尾空白字符
+            if line and line not in interfaces:  # 确保没有重复的接口名称
+                interfaces.append(line)  # 将接口名称添加到列表中
+    return interfaces  # 返回包含所有网络接口名称的列表
 
 def get_net_segments(interface):
     net_segments = []
+    # 定义一个 PowerShell 命令，用于获取指定网络接口的所有 IPv4 地址
+    # -InterfaceAlias 参数指定接口别名
+    # Where-Object 过滤条件，确保只获取 IPv4 地址
+    # Select-Object 提取 IPAddress 属性的值
     command = f'powershell "Get-NetIPAddress -InterfaceAlias \'{interface}\' | Where-Object {{ $_.AddressFamily -eq \'IPv4\' }} | Select-Object -ExpandProperty IPAddress"'
+    
+    # 使用 os.popen 执行 PowerShell 命令，并获取命令输出的结果
     with os.popen(command) as res:
         for line in res:
-            line = line.strip()
+            line = line.strip()  # 去除每行的首尾空白字符
+            # 使用正则表达式匹配 IP 地址前三段
             net_segment = re.findall(r"(\d+\.\d+\.\d+)\.\d+", line)
             if net_segment:
-                net_segments.append(net_segment[0])
-    return net_segments
+                net_segments.append(net_segment[0])  # 将匹配到的前三段 IP 地址添加到列表中
+    return net_segments  # 返回包含所有匹配到的网络段的列表
+
 
 def ping_net_segments_all(net_segments): 
     with ThreadPoolExecutor(max_workers=4) as executor:  # 最多可以有4个并发的线程同时运行
