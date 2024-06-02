@@ -1,12 +1,5 @@
 from hashlib import md5
 import re, os
-from utils import *
-
-import os
-
-def clear_arp_cache():
-    os.system('arp -d')
-    print("ARP cache cleared")
 
 
 TRANSLATION = {
@@ -41,6 +34,16 @@ Veuillez modifier le symbole au début de chaque ligne selon les besoins.
 # signifie que l'ap est configuré par défaut et n'a pas besoin d'être modifié ou affiché dans le logiciel
 ! est la configuration qui doit être modifiée, et qui doit être configurée et affichée dans le logiciel
 Les configurations qui ne commencent pas par un symbole spécial sont uniquement affichées dans le logiciel.'''
+
+
+def get_network_interfaces():
+    interfaces = []
+    with os.popen("ip link show") as res:
+        for line in res:
+            if line.strip().endswith(":") and "lo" not in line:
+                interface = line.split(":")[1].strip()
+                interfaces.append(interface)
+    return interfaces
 
 
 def encrypt_md5(s):
@@ -110,7 +113,6 @@ def get_config():
     #           s.append(str) #每个文件的文本存到list中
     return files
 
-
 def get_file_config(file):
     data = []
     with open(file,'r',encoding='utf-8') as f:
@@ -145,27 +147,3 @@ def get_file_config(file):
                     #     "! descript=\"Vichy AP A\"",
                     #     "ew_udp=false"
                     # ]
-
-
-
-
-
-# def get_file_config(file):
-#     data = []
-#     with open(file,'r',encoding='utf-8') as f:
-#         lines_unhandled = f.readlines()
-#         lines_unhandled = [x.strip() for x in lines_unhandled]
-#         lines = list(set(lines_unhandled))
-#         lines.sort()
-#         lines.remove('')
-#         print(lines)
-#         if lines:
-#             for line in lines:
-#                 line = line.strip()
-#                 if line[0] == "#" or "=;" in line or "= ;" in line or "=  ;" in line:
-#                     continue
-#                 line = line.split(';')[0]
-#                 if "descript" not in line:
-#                     line = ''.join(line.split())
-#                 data.append(line)
-#     return data
