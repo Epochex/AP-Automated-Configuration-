@@ -30,65 +30,83 @@ IP_LIST = []
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("Hanshow AP Config Toolbox")
-        MainWindow.resize(900, 650)
-        MainWindow.setStyleSheet('QWidget {font: "Roboto Mono"}')
-        self.centralwidget = QWidget(MainWindow)
+        MainWindow.setObjectName("Hanshow AP Config Toolbox") # 主窗口名称
+        MainWindow.resize(900, 800)     # 主窗口大小
+        MainWindow.setStyleSheet('QWidget {font: "Roboto Mono"}') # 设置整个应用程序窗口的样式，所有控件都使用 'Roboto Mono' 字体
+
+        # 创建中央窗口部件，这是所有其他控件的父控件
+        self.centralwidget = QWidget(MainWindow) 
         self.centralwidget.setObjectName("centralwidget")
+
+        # 创建一个表格视图控件，用于显示数据
         self.tableWidget = QTableView(self.centralwidget)
-        self.tableWidget.setGeometry(QRect(30, 20, 511, 560))
+        self.tableWidget.setGeometry(QRect(30, 20, 511, 560))  # 设置表格视图的位置和大小
         self.tableWidget.setObjectName("tableWidget")
+
+        # 创建一个按钮控件，用于触发某些操作
         self.pushButton = QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QRect(700, 40, 75, 24))
+        self.pushButton.setGeometry(QRect(700, 40, 75, 24)) # 设置按钮的位置和大小
         self.pushButton.setObjectName("pushButton")
+
+        # 创建一个下拉框控件，用于选择不同的配置
         self.selectBox = QComboBox(self.centralwidget)
-        self.selectBox.setGeometry(QRect(688, 80, 100, 24))
+        self.selectBox.setGeometry(QRect(688, 80, 100, 24)) # 设置下拉框的位置和大小
         self.selectBox.setObjectName("selectBox")
+
+        # 创建一个按钮控件，用于编辑配置
         self.configButton = QPushButton(self.centralwidget)
-        self.configButton.setGeometry(QRect(650, 120, 75, 24))
+        self.configButton.setGeometry(QRect(650, 120, 75, 24)) # 设置按钮的位置和大小
         self.configButton.setObjectName("configButton")
+
+        # 用于设置界面中的文本翻译
         _translate = QCoreApplication.translate
-        self.configButton.setText(_translate("MainWindow", "Edit"))
-        self.configButton.setVisible(False)
-        self.configButton.clicked.connect(self.open_config_file)
+        self.configButton.setText(_translate("MainWindow", "Edit")) # 设置按钮文本
+        self.configButton.setVisible(False)  # 默认隐藏按钮
+        self.configButton.clicked.connect(self.open_config_file)    # 将按钮点击信号连接到 open_config_file 方法
+
+        # 创建另一个按钮控件，用于重新加载配置
         self.reloadButton = QPushButton(self.centralwidget)
-        self.reloadButton.setGeometry(QRect(750, 120, 75, 24))
+        self.reloadButton.setGeometry(QRect(750, 120, 75, 24))  # 设置按钮的位置和大小
         self.reloadButton.setObjectName("reloadButton")
+
+        # 设置按钮的文本和可见性
         _translate = QCoreApplication.translate
         self.reloadButton.setText(_translate("MainWindow", "Reload"))
-        self.reloadButton.setVisible(False)
-        self.reloadButton.clicked.connect(self.grpChange)
+        self.reloadButton.setVisible(False)  # 默认隐藏按钮,用户界面第一次显示时，这个按钮是不可见的。只有在特定条件下（例如用户进行某些操作后），通过调用 setVisible(True) 方法，才能让这个按钮显示出来
+        self.reloadButton.clicked.connect(self.grpChange)  # 将按钮点击信号连接到 grpChange 方法
+        
+        # 获取所有配置文件的列表，并添加到下拉框中
         configs = get_config()
-        configs.insert(0, GRP_CONFIG)
-        configs.remove('readme.txt')
-        self.selectBox.addItems(configs)
-        self.selectBox.currentIndexChanged.connect(self.grpChange)
+        configs.insert(0, GRP_CONFIG) # 在列表的第一个位置插入默认配置
+        configs.remove('readme.txt')  # 移除不需要的文件
+        self.selectBox.addItems(configs) # 将配置文件列表添加到下拉框中
+        self.selectBox.currentIndexChanged.connect(self.grpChange) # 当下拉框的选择改变时，调用 grpChange 方法
         self.alert = QLabel(self.centralwidget)
         self.alert.setGeometry(QRect(30, 580, 511, 24))
         self.config = QListWidget(self.centralwidget)  # 确保初始化 self.config
         self.config = QListWidget(self.centralwidget)
         self.config.setGeometry(QRect(550, 180, 340, 380))
         self.config.setObjectName("configInfo")
-
+        # 设置主窗口的中央部件
         MainWindow.setCentralWidget(self.centralwidget)
+
+        # 创建菜单栏
         self.menubar = QMenuBar(MainWindow)
-        self.menubar.setGeometry(QRect(0, 0, 800, 22))
+        self.menubar.setGeometry(QRect(0, 0, 800, 22))  # 设置菜单栏的位置和大小
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
+
+        # 创建状态栏
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        # self.model = QStandardItemModel(0, 2) 
+
+        # 创建一个标准项模型对象，表格的列数为3
         self.model = QStandardItemModel(0, 3)  # 修改列数
-        # self.model.setHorizontalHeaderLabels(['Address IP', 'Address Mac'])
-        self.model.setHorizontalHeaderLabels(['Select', 'Address IP', 'Address Mac']) #多加一个复选框
+        self.model.setHorizontalHeaderLabels(['Select', 'Address IP', 'Address Mac']) # 多加一个复选框
         self.tableWidget.setModel(self.model)
-        ################################################
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableWidget.setSelectionMode(QAbstractItemView.MultiSelection)  # 允许多选
-        self.tableWidget.setEditTriggers(QTableView.NoEditTriggers)
-        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        ################################################
+
+
         tool = self.addToolBar("File")
         self.action_detail = QAction("Detail", self)
         self.action_config = QAction("Config", self)
@@ -107,7 +125,7 @@ class Ui_MainWindow(object):
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.msgBox = QMessageBox()
         self.retranslateUi(MainWindow)
-        self.pushButton.released.connect(self.slotAdd)  # type: ignore
+        self.pushButton.released.connect(self.slotAdd)
         QMetaObject.connectSlotsByName(MainWindow)
 
         self.slotAdd()
@@ -264,30 +282,13 @@ class Ui_MainWindow(object):
             select_item.setCheckState(Qt.Unchecked)
             ip_item = QStandardItem(ip)
             mac_item = QStandardItem(mac.replace('-', ':').upper())
-            self.model.setItem(i, 0, mac_item)
+            self.model.setItem(i, 0, select_item)  # 修正这里，确保复选框在最左侧
             self.model.setItem(i, 1, ip_item)
             self.model.setItem(i, 2, mac_item)
-            i = i+1
+            i = i + 1
             IP_LIST.append(ip)
         self.pushButton.setEnabled(True)
         print(IP_LIST)
-
-    # def update_tab(self, r):
-    # global IP_LIST
-    # i = 0
-    # for k, v in df:
-    #     select_item = QStandardItem()
-    #     select_item.setCheckable(True)
-    #     select_item.setCheckState(Qt.Unchecked)
-    #     ip_item = QStandardItem(k)
-    #     mac_item = QStandardItem(v.replace('-', ':').upper())
-    #     self.model.setItem(i, 0, select_item)
-    #     self.model.setItem(i, 1, ip_item)
-    #     self.model.setItem(i, 2, mac_item)
-    #     i = i + 1
-    #     IP_LIST.append(k)
-    # self.pushButton.setEnabled(True)
-    # print(IP_LIST)
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
