@@ -26,24 +26,34 @@ IP_LIST = []
 class InterfaceSelectionDialog(QDialog):
     def __init__(self, interfaces, parent=None):
         super().__init__(parent)
+        # 设置对话框窗口标题
         self.setWindowTitle("Select Network Interface")
+        
+        # 创建垂直布局管理器
         self.layout = QVBoxLayout(self)
-
+        
+        # 创建并添加一个标签，用于提示用户选择网络接口
         self.label = QLabel("Please select a network interface:", self)
         self.layout.addWidget(self.label)
-
+        
+        # 创建并添加一个下拉框，里面包含所有可供选择的网络接口
         self.interfaceBox = QComboBox(self)
-        self.interfaceBox.addItems(interfaces)
+        self.interfaceBox.addItems(interfaces)  # 将接口列表添加到下拉框中
         self.layout.addWidget(self.interfaceBox)
-
+        
+        # 创建并添加对话框按钮框，包含“确定”和“取消”按钮
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.layout.addWidget(self.buttonBox)
-
+        
+        # 连接“确定”按钮的点击事件到对话框的 accept() 方法
         self.buttonBox.accepted.connect(self.accept)
+        # 连接“取消”按钮的点击事件到对话框的 reject() 方法
         self.buttonBox.rejected.connect(self.reject)
 
+    # 获取当前选中的网络接口
     def getSelectedInterface(self):
         return self.interfaceBox.currentText()
+
     
 
 class Ui_MainWindow(object):
@@ -87,6 +97,13 @@ class Ui_MainWindow(object):
         self.config = QListWidget(self.centralwidget)
         self.config.setGeometry(QRect(550, 180, 340, 380))
         self.config.setObjectName("configInfo")
+        
+        # 退回选择网络接口按钮
+        self.returnButton = QPushButton(self.centralwidget)
+        self.returnButton.setGeometry(QRect(675, 10, 150, 24))
+        self.returnButton.setObjectName("returnButton")
+        self.returnButton.setText(_translate("MainWindow", "Re-Select Network"))
+        self.returnButton.clicked.connect(self.show_interface_selection_dialog)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
