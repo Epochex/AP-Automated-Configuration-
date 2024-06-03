@@ -42,7 +42,7 @@ def clear_arp_cache():
 
 def get_network_interfaces():
     interfaces = []
-    #获取所有网络接口的名称（别名）
+    # 获取所有网络接口的名称（别名）
     command = 'powershell "Get-NetIPAddress | Select-Object -ExpandProperty InterfaceAlias"'
     
     # 使用 os.popen 执行 PowerShell 命令，并获取命令输出的结果
@@ -55,9 +55,9 @@ def get_network_interfaces():
 
 def get_net_segments(interface):
     net_segments = []
-    # 定义一个 PowerShell 命令，用于获取指定网络接口的所有 IPv4 地址
+    # 获取指定网络接口的所有 IPv4 地址，$_获取上一个管道符运过来的所有对象，AddressFamily= ipv4/ipv6 , ExpandProperty 展开说说叭 
     # -InterfaceAlias 参数指定接口别名
-    # Where-Object 过滤条件，确保只获取 IPv4 地址
+    # Where-Object 过滤条件，只获取 IPv4 地址
     # Select-Object 提取 IPAddress 属性的值
     command = f'powershell "Get-NetIPAddress -InterfaceAlias \'{interface}\' | Where-Object {{ $_.AddressFamily -eq \'IPv4\' }} | Select-Object -ExpandProperty IPAddress"'
     
