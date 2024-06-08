@@ -61,34 +61,50 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("Hanshow AP Config Toolbox")
         MainWindow.resize(900, 650)
         MainWindow.setStyleSheet('QWidget {font: "Roboto Mono"}')
+        
+        # 中心窗口，名为centralwidget
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        
+        # 表格视图
         self.tableWidget = QTableView(self.centralwidget)
         self.tableWidget.setGeometry(QRect(30, 20, 511, 560))
         self.tableWidget.setObjectName("tableWidget")
+        # 按钮，胶pushButton
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QRect(700, 40, 75, 24))
         self.pushButton.setObjectName("pushButton")
+        # 下拉框
         self.selectBox = QComboBox(self.centralwidget)
         self.selectBox.setGeometry(QRect(688, 80, 100, 24))
         self.selectBox.setObjectName("selectBox")
+        # config
         self.configButton = QPushButton(self.centralwidget)
         self.configButton.setGeometry(QRect(650, 120, 75, 24))
         self.configButton.setObjectName("configButton")
+        # 把点击信号传到open_config_file
         _translate = QCoreApplication.translate
         self.configButton.setText(_translate("MainWindow", "Edit"))
         self.configButton.setVisible(False)
         self.configButton.clicked.connect(self.open_config_file)
         self.reloadButton = QPushButton(self.centralwidget)
         self.reloadButton.setGeometry(QRect(750, 120, 75, 24))
+        
+        # reload ？ 没看懂
         self.reloadButton.setObjectName("reloadButton")
         _translate = QCoreApplication.translate
         self.reloadButton.setText(_translate("MainWindow", "Reload"))
         self.reloadButton.setVisible(False)
+        
+        # 连接reload按钮的点击信号到grpChange方法
         self.reloadButton.clicked.connect(self.grpChange)
+        
+        # 获取配置文件列表，添加到选择框中，并移除readme.txt
         configs = get_config()
-        configs.insert(0, GRP_CONFIG)
-        configs.remove('readme.txt')
+        
+        # ['DEFAULT', 'config1', 'config2', 'config3']
+        configs.insert(0, GRP_CONFIG) # index = 0,element = GRP_CONFIG
+        configs.remove('readme.txt') 
         self.selectBox.addItems(configs)
         self.selectBox.currentIndexChanged.connect(self.grpChange)
         self.alert = QLabel(self.centralwidget)
@@ -172,58 +188,119 @@ class Ui_MainWindow(object):
 
     #事件触发
     def processtrigger(self, action):
+        # 处理用户触发的不同操作的函数
         if action.text() == "Detail":
+            # 如果操作是 "Detail"
             r = self.tableWidget.selectionModel().selectedRows()
+            # 获取表格中选中的行
             if r:
+                # 如果有选中的行
                 index_ip = self.tableWidget.model().index(self.tableWidget.currentIndex().row(), 0)
+                # 获取选中行中IP列的索引
                 index_mac = self.tableWidget.model().index(index_ip.row(), 1)
+                # 获取同一行中MAC列的索引
                 data_ip = self.tableWidget.model().data(index_ip)
+                # 从模型中检索IP数据
                 data_mac = self.tableWidget.model().data(index_mac)
+                # 从模型中检索MAC数据
                 data = [data_ip, data_mac]
+                # 将IP和MAC数据组合成一个列表
                 print(data)
+                # 打印数据用于调试
                 self.launchPopup(data_ip, data_mac)
+                # 使用IP和MAC数据启动一个弹出窗口
+
         if action.text() == "Config":
+            # 如果操作是 "Config"
             r = self.tableWidget.selectionModel().selectedRows()
+            # 获取表格中选中的行
             if r:
+                # 如果有选中的行
                 index_ip = self.tableWidget.model().index(self.tableWidget.currentIndex().row(), 0)
+                # 获取选中行中IP列的索引
                 index_mac = self.tableWidget.model().index(index_ip.row(), 1)
+                # 获取同一行中MAC列的索引
                 data_ip = self.tableWidget.model().data(index_ip)
+                # 从模型中检索IP数据
                 data_mac = self.tableWidget.model().data(index_mac)
+                # 从模型中检索MAC数据
                 data = [data_ip, data_mac]
+                # 将IP和MAC数据组合成一个列表
                 print(data)
+                # 打印数据用于调试
                 self.launchPopup(data_ip, data_mac)
+                # 使用IP和MAC数据启动一个弹出窗口
+
         if action.text() == "Delete":
+            # 如果操作是 "Delete"
             r = self.tableWidget.selectionModel().selectedRows()
+            # 获取表格中选中的行
             if r:
+                # 如果有选中的行
                 index = self.tableWidget.currentIndex()
+                # 获取当前选中的索引
                 print(index.row())
+                # 打印行索引用于调试
                 self.model.removeRow(index.row())
+                # 从模型中删除选中的行
 
         if action.text() == "Version Check":
+            # 如果操作是 "Version Check"
             if IP_LIST:
+                # 如果IP列表不为空
                 version = []
+                # 初始化一个空列表用于存储版本信息
                 res = ["AP Version Check Result:", "IP\t\t\tVersion"]
+                # 初始化结果列表并添加标题
                 for ip in IP_LIST:
+                    # 遍历IP列表中的每个IP
                     sleep(0.2)
+                    # 每次检查之间暂停0.2秒，以避免系统过载
                     ssh = paramiko.SSHClient()
+                    # 创建一个新的SSH客户端实例
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    # 设置策略为自动添加主机密钥（如果缺失）
                     try:
                         ssh.connect(ip, username="root", password="hanshow-imx6")
-                        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("/home/elinker/bin/elinker -v")
-                        version.append(ssh_stdout.read().decode('utf-8'))
+                        # 尝试使用给定的凭证连接到该IP地址的SSH服务器
+                        
+                        
+                        stdin, stdout, stderr = ssh.exec_command("[ -f /home/elinker/bin/elinker ] && echo 'File exists' || echo 'File not found'")
+                        # 执行命令检查文件是否存在，[ -f /home/elinker/bin/elinker ] 判断语句
+                        
+                        file_check = stdout.read().decode('utf-8').strip()
+                        if file_check == 'File not found':
+                            version.append("Not a standard AP")
+                        else:
+                            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("/home/elinker/bin/elinker -v")
+                            version.append(ssh_stdout.read().decode('utf-8'))
                     except:
                         version.append("ERROR")
+                        # 如果出现错误，向版本列表中添加“ERROR”
                         print("Error when connect to : ", ip)
+                        # 打印错误信息用于调试
                 for i, v in zip(IP_LIST, version):
+                    # 同时遍历IP列表和版本列表
                     res.append(i + '\t\t' + v)
-                self.msgBox.setIcon(QMessageBox().Information)
+                    # 将IP及其对应的版本添加到结果列表中
+                self.msgBox.setIcon(QMessageBox.Information)
+                # 将消息框的图标设置为信息图标
                 self.msgBox.setText("\n".join(res))
+                # 将消息框的文本设置为结果列表的连接字符串
                 self.msgBox.setWindowTitle("AP Version")
+                # 设置消息框的标题
                 self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
+                # 设置消息框的窗口图标
                 self.msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                # 向消息框添加确定和取消按钮
                 returnValue = self.msgBox.exec()
+                # 执行消息框并获取返回值
                 if returnValue == QMessageBox.Ok:
+                    # 如果用户点击确定
                     return
+                    # 返回函数
+
+
 
         if action.text() == "Descript Check":
             if IP_LIST:
@@ -255,14 +332,19 @@ class Ui_MainWindow(object):
 
     def grpChange(self):
         global GRP_CONFIG, CONFIG
+        # 获取当前选择框中选中的文本，赋值给 GRP_CONFIG
         GRP_CONFIG = self.selectBox.currentText()
-        self.reloadButton.setEnabled(False)
+        self.reloadButton.setEnabled(False)  # 禁用重载按钮
         if GRP_CONFIG != "DEFAULT":
+            # 如果不是默认配置，则读取对应配置文件的内容(read_config_file)，然后更新 CONFIG 变量
             CONFIG = get_file_config(f"config/{GRP_CONFIG}")
             self.read_config_file()
+            # 显示配置按钮和重载，reload ？
             self.configButton.setVisible(True)
             self.reloadButton.setVisible(True)
+            # 默认配置
         else:
+            # 选择DEFUALT配置，则清空configInfo
             self.config.clear()
             self.configButton.setVisible(False)
             self.reloadButton.setVisible(False)
@@ -271,18 +353,30 @@ class Ui_MainWindow(object):
     def read_config_file(self):
         self.config.clear()
         self.config.addItem("Settings to change manually: ")
+
+        # 遍历全局 CONFIG 列表中的每个配置项
         for i, conf in enumerate(CONFIG):
+            # 如果配置项以 "!" 开头，表示该项需要手动更改
             if conf[0] == "!":
+                # =拆分，0拿第一个，得到!字段名，把!拆掉,得到字段名
                 type = conf.split("=")[0].split("!")[1].strip()
-                value = conf.split("=")[1]
+                value = conf.split("=")[1]  
+                # 将配置类型翻译成用户友好的描述，并与配置值连接起来添加到配置列表视图中
                 self.config.addItem(TRANSLATION[type] + value)
+        
+        ########################## 添加一个空行，这里的意义没有看懂######################
         self.config.addItem("")
         self.config.addItem("Settings do not need to be changed: ")
+
+        # 再次遍历全局 CONFIG 列表中的每个配置项
         for i, conf in enumerate(CONFIG):
+            # 如果配置项不以 "!" 开头，表示该项不需要手动更改
             if conf[0] != "!":
+                # 分离出配置类型和配置值
                 type = conf.split("=")[0].strip()
                 value = conf.split("=")[1]
                 self.config.addItem(TRANSLATION[type] + value)
+
 
     def open_config_file(self):
         print("open file")
@@ -297,23 +391,23 @@ class Ui_MainWindow(object):
             self.reloadButton.setEnabled(True)
             
             
-    ############################### 修改 slotAdd 方法以使用选定的网络接口进行扫描
+    #修改 slotAdd 方法以使用选定的网络接口进行扫描
     def slotAdd(self):
         self.pushButton.setEnabled(False)
         self.getAP = GetApTheard(self.selected_interface)
         self.getAP._sum.connect(self.update_tab)
         self.getAP.start()
         global VPN
-        if VPN == True:
-            VPN = False
-            self.msgBox.setIcon(QMessageBox().Warning)
-            self.msgBox.setText(f"Please disable all your VPN connections!")
-            self.msgBox.setWindowTitle("Error")
-            self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
-            self.msgBox.setStandardButtons(QMessageBox.Ok)
-            returnValue = self.msgBox.exec()
-            if returnValue == QMessageBox.Ok:
-                return
+        # if VPN == True:
+        #     VPN = False
+        #     self.msgBox.setIcon(QMessageBox().Warning)
+        #     self.msgBox.setText(f"Please disable all your VPN connections!")
+        #     self.msgBox.setWindowTitle("Error")
+        #     self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
+        #     self.msgBox.setStandardButtons(QMessageBox.Ok)
+        #     returnValue = self.msgBox.exec()
+        #     if returnValue == QMessageBox.Ok:
+        #         return
 
 
     def update_tab(self, r):
@@ -668,7 +762,7 @@ class GetApTheard(QThread):
         self.interface = interface
 
     def run(self):
-        global df, VPN
+        global df
         try:
             df = get_ap(self.interface).values.tolist()
         except Exception as e:
