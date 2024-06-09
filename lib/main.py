@@ -13,6 +13,7 @@ import os
 from subprocess import Popen
 from time import sleep
 
+
 sys.path.append(os.path.dirname(__file__))
 from utils import *
 from model import *
@@ -304,30 +305,60 @@ class Ui_MainWindow(object):
 
         if action.text() == "Descript Check":
             if IP_LIST:
+                # 如果IP列表不为空
                 descript = []
+                # 初始化一个空列表用于存储描述信息
                 res = ["Description Check Result:", "IP\t\t\tDescription"]
+                # 初始化结果列表并添加标题
                 for ip in IP_LIST:
                     sleep(0.2)
                     ssh = paramiko.SSHClient()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     try:
-                        ssh.connect(ip, username="root", password="hanshow-imx6")
-                        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("cat /tmp/.config.ini |grep descript")
-                        d = ssh_stdout.read().decode('utf-8').split('=')[1]
-                        descript.append(d)
-                    except:
+                        ssh.connect(ip, username="root", password="hanshow-imx6", timeout=1)
+                        # 尝试使用给定的凭证连接到该IP地址的SSH服务器，设置超时时间为1秒
+                        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command("cat /tmp/.config.ini |grep descript", timeout=1)
+                        # 执行命令以获取配置文件中的描述信息，并设置命令超时时间为1秒
+                        output = ssh_stdout.read().decode('utf-8').strip()
+                        # 读取输出并去除两端空白
+                        if output:
+                            d = output.split('=')[1]
+                            descript.append(d)
+                        else:
+                            descript.append("no such file")
+                            # 没有找到描述信息
+                    except paramiko.ssh_exception.SSHException:
                         descript.append("ERROR")
+                        # 如果出现SSH连接错误，向描述列表中添加“ERROR”
                         print("Error when connect to : ", ip)
+                    except paramiko.ssh_exception.SSHException as e:
+                        if "timed out" in str(e):
+                            descript.append("Check timeout")
+                            # 检查过程超时
+                        else:
+                            descript.append("ERROR")
+                            print("Error when connect to : ", ip)
                 for i, v in zip(IP_LIST, descript):
+                    # 同时遍历IP列表和描述列表
                     res.append(i + '\t\t' + v)
-                self.msgBox.setIcon(QMessageBox().Information)
+                    # 将IP及其对应的描述添加到结果列表中
+                self.msgBox.setIcon(QMessageBox.Information)
+                # 将消息框的图标设置为信息图标
                 self.msgBox.setText("\n".join(res))
+                # 将消息框的文本设置为结果列表的连接字符串
                 self.msgBox.setWindowTitle("AP Description")
+                # 设置消息框的标题
                 self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
+                # 设置消息框的窗口图标
                 self.msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                # 向消息框添加确定和取消按钮
                 returnValue = self.msgBox.exec()
+                # 执行消息框并获取返回值
                 if returnValue == QMessageBox.Ok:
+                    # 如果用户点击确定
                     return
+                    # 返回函数
+
 
 
     def grpChange(self):
@@ -410,17 +441,67 @@ class Ui_MainWindow(object):
         #         return
 
 
+    # def update_tab(self, r):
+    #     global IP_LIST
+    #     i = 0
+    #     # k ip, v mac
+    #     for k, v in df:
+    #         self.model.setItem(i, 0, QStandardItem(k))
+    #         self.model.setItem(i, 1, QStandardItem(
+    #             v.replace('-', ':').upper()))
+    #         i = i+1
+    #         IP_LIST.append(k)
+    #     self.pushButton.setEnabled(True)
+    #     print(IP_LIST)
     def update_tab(self, r):
         global IP_LIST
+        global LANG  # 确保使用全局变量 LANG
         i = 0
-        for k, v in df:
-            self.model.setItem(i, 0, QStandardItem(k))
-            self.model.setItem(i, 1, QStandardItem(
-                v.replace('-', ':').upper()))
-            i = i+1
-            IP_LIST.append(k)
+        
+        # 获取符合条件的 IP 和 MAC 地址的 DataFrame
+        df_filtered = get_arp_ip_mac()
+        
+        # 调试信息，检查 LANG 列表的内容和长度
+        print(f"LANG 在 update_tab 中: {LANG}")
+        print(f"df_filtered 的列名: {df_filtered.columns.tolist()}")
+
+        if len(LANG) < 4:
+            raise ValueError("LANG 列表的长度不足，无法访问索引 3。")
+
+        # 遍历过滤后的 DataFrame 中的每个元素
+        for index, row in df_filtered.iterrows():
+            print(f"当前行数据: {row}")
+            ip = row[LANG[3]]
+            mac = row[LANG[1]]
+            self.model.setItem(i, 0, QStandardItem(ip))
+            self.model.setItem(i, 1, QStandardItem(mac.replace('-', ':').upper()))
+            i = i + 1
+            IP_LIST.append(ip)
+        
         self.pushButton.setEnabled(True)
         print(IP_LIST)
+
+
+        
+    # def update_tab(self, r):
+    #     global IP_LIST
+    #     i = 0
+        
+    #     # 获取符合条件的 IP 和 MAC 地址的 DataFrame
+    #     df_filtered = get_arp_ip_mac()
+        
+    #     # 遍历过滤后的 DataFrame 中的每个元素
+    #     for index, row in df_filtered.iterrows():
+    #         ip = row[LANG[3]]
+    #         mac = row[LANG[1]]
+    #         self.model.setItem(i, 0, QStandardItem(ip))
+    #         self.model.setItem(i, 1, QStandardItem(mac.replace('-', ':').upper()))
+    #         i = i + 1
+    #         IP_LIST.append(ip)
+        
+    #     self.pushButton.setEnabled(True)
+    #     print(IP_LIST)
+
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate

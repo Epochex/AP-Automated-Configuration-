@@ -78,29 +78,80 @@ def ping_net_segments_all(net_segments):
             for i in range(1, 255):
                 executor.submit(os.popen, f"ping -w 1 -n 1 {net_segment}.{i}")  # -w 1，等待一秒，-n 1发起一个请求
 
+# def get_arp_ip_mac():
+#     header = None
+#     with os.popen("arp -a") as res:
+#         for line in res:
+#             line = line.strip()
+#             if not line or line.startswith("接口") or line.startswith("Interface"):
+#                 global LANG
+#                 if line.startswith("接口"):
+#                     LANG = ['接口', '物理地址', '类型', 'Internet 地址']
+#                 elif line.startswith("Interface"):
+#                     LANG = ['Interface', 'Physical Address', 'Type', 'Internet Address']
+#                 continue
+#             if header is None:
+#                 header = re.split(" {2,}", line.strip())
+#                 break
+#         # 读取 ARP 表数据
+#         df = pd.read_csv(res, sep=" {2,}", names=header, header=None, engine='python')
+    
+#     # 过滤以 98- 开头的 MAC 地址
+#     df_bool = df[LANG[1]].str.startswith("b0-")
+#     df = df[df_bool].reset_index(drop=True)
+    
+#     return df
 def get_arp_ip_mac():
+    global LANG  # 声明使用全局变量 LANG
     header = None
+    arp_output = []
+
     with os.popen("arp -a") as res:
-        # get header
         for line in res:
             line = line.strip()
-            if not line or line.startswith("接口") or line.startswith("Interface"):
-                global LANG
-                if line.startswith("接口"):
-                    LANG = ['接口','物理地址','动态', 'Internet 地址']
-                elif line.startswith("Interface"):
-                    LANG = ['Interface','Physical Address','dynamic', 'Internet Address']
+            if not line:
                 continue
-            if header is None:
-                header = re.split(" {2,}", line.strip())
-                break
-        # choose AP who start with 98-
-        df = pd.read_csv(res, sep=" {2,}",
-                         names=header, header=None, engine='python')
-        print(df)
-        df_bool = df[LANG[1]].str.startswith("98-")
-        df = df[df_bool].reset_index(drop=True)
+            if line.startswith("接口") or line.startswith("Interface"):
+                if line.startswith("接口"):
+                    LANG = ['接口', '物理地址', '类型', 'Internet 地址']
+                elif line.startswith("Interface"):
+                    LANG = ['Interface', 'Physical Address', 'Type', 'Internet Address']
+                print(f"LANG 在函数内部初始化为: {LANG}")  # 调试信息
+                continue
+            arp_output.append(line)
+
+    # 提取表头和数据行
+    for i, line in enumerate(arp_output):
+        if not header:
+            header = re.split(r'\s{2,}', line)
+            continue
+
+        # 读取数据行
+        data_lines = arp_output[i+1:]
+        break
+
+    # 创建 DataFrame
+    data = []
+    for line in data_lines:
+        split_line = re.split(r'\s{2,}', line)
+        if len(split_line) == len(header):
+            data.append(split_line)
+
+    df = pd.DataFrame(data, columns=header)
+
+    # 输出调试信息，确保 LANG 正确初始化
+    print(f"LANG 初始化为: {LANG}")
+    print(f"df 的列名: {df.columns.tolist()}")
+    print(f"df 内容:\n{df}")
+
+    # 过滤以 98- 开头的 MAC 地址
+    df_bool = df[LANG[1]].str.startswith("b0-")
+    print(f"df_bool 内容:\n{df_bool}")
+    df = df[df_bool].reset_index(drop=True)
+    print(f"过滤后的 df 内容:\n{df}")
+    
     return df
+
 
 def ping_ip_list(ips, max_workers=4):
     print("Scanning online AP now")
