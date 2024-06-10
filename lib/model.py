@@ -101,55 +101,29 @@ def ping_net_segments_all(net_segments):
 #     df = df[df_bool].reset_index(drop=True)
     
 #     return df
-def get_arp_ip_mac():
-    global LANG  # 声明使用全局变量 LANG
-    header = None
-    arp_output = []
 
+def get_arp_ip_mac():
+    global LANG
+    LANG = []
+    header = None
     with os.popen("arp -a") as res:
         for line in res:
             line = line.strip()
-            if not line:
-                continue
-            if line.startswith("接口") or line.startswith("Interface"):
+            if not line or line.startswith("接口") or line.startswith("Interface"):
                 if line.startswith("接口"):
                     LANG = ['接口', '物理地址', '类型', 'Internet 地址']
                 elif line.startswith("Interface"):
                     LANG = ['Interface', 'Physical Address', 'Type', 'Internet Address']
-                print(f"LANG 在函数内部初始化为: {LANG}")  # 调试信息
                 continue
-            arp_output.append(line)
-
-    # 提取表头和数据行
-    for i, line in enumerate(arp_output):
-        if not header:
-            header = re.split(r'\s{2,}', line)
-            continue
-
-        # 读取数据行
-        data_lines = arp_output[i+1:]
-        break
-
-    # 创建 DataFrame
-    data = []
-    for line in data_lines:
-        split_line = re.split(r'\s{2,}', line)
-        if len(split_line) == len(header):
-            data.append(split_line)
-
-    df = pd.DataFrame(data, columns=header)
-
-    # 输出调试信息，确保 LANG 正确初始化
-    print(f"LANG 初始化为: {LANG}")
-    print(f"df 的列名: {df.columns.tolist()}")
-    print(f"df 内容:\n{df}")
-
-    # 过滤以 98- 开头的 MAC 地址
-    df_bool = df[LANG[1]].str.startswith("b0-")
-    print(f"df_bool 内容:\n{df_bool}")
-    df = df[df_bool].reset_index(drop=True)
-    print(f"过滤后的 df 内容:\n{df}")
+            if header is None:
+                header = re.split(" {2,}", line.strip())
+                break
+        # Read ARP table data
+        df_pretraite = pd.read_csv(res, sep=" {2,}", names=header, header=None, engine='python')
     
+    # Filter MAC addresses starting with b0-
+    df = df_pretraite[df_pretraite[LANG[1]].str.startswith("b0-")].reset_index(drop=True)
+    print(f"first filtred: {df}")
     return df
 
 

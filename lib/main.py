@@ -20,7 +20,6 @@ from model import *
 
 GRP_CONFIG = "DEFAULT"
 CONFIG = []
-VPN = False
 df = ''
 IP_LIST = []
 
@@ -429,78 +428,33 @@ class Ui_MainWindow(object):
         self.getAP._sum.connect(self.update_tab)
         self.getAP.start()
         global VPN
-        # if VPN == True:
-        #     VPN = False
-        #     self.msgBox.setIcon(QMessageBox().Warning)
-        #     self.msgBox.setText(f"Please disable all your VPN connections!")
-        #     self.msgBox.setWindowTitle("Error")
-        #     self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
-        #     self.msgBox.setStandardButtons(QMessageBox.Ok)
-        #     returnValue = self.msgBox.exec()
-        #     if returnValue == QMessageBox.Ok:
-        #         return
-
-
-    # def update_tab(self, r):
-    #     global IP_LIST
-    #     i = 0
-    #     # k ip, v mac
-    #     for k, v in df:
-    #         self.model.setItem(i, 0, QStandardItem(k))
-    #         self.model.setItem(i, 1, QStandardItem(
-    #             v.replace('-', ':').upper()))
-    #         i = i+1
-    #         IP_LIST.append(k)
-    #     self.pushButton.setEnabled(True)
-    #     print(IP_LIST)
-    def update_tab(self, r):
+    
+    def update_tab(self):
         global IP_LIST
-        global LANG  # 确保使用全局变量 LANG
         i = 0
         
-        # 获取符合条件的 IP 和 MAC 地址的 DataFrame
+        # 获取符合条件的 IP 和 MAC 地址的df
         df_filtered = get_arp_ip_mac()
         
-        # 调试信息，检查 LANG 列表的内容和长度
-        print(f"LANG 在 update_tab 中: {LANG}")
+        print(f"df_filtered 在 update_tab 中: {df_filtered}")
         print(f"df_filtered 的列名: {df_filtered.columns.tolist()}")
 
-        if len(LANG) < 4:
-            raise ValueError("LANG 列表的长度不足，无法访问索引 3。")
+        # 获取列名
+        ip_column = df_filtered.columns[0]
+        mac_column = df_filtered.columns[1]
 
         # 遍历过滤后的 DataFrame 中的每个元素
-        for index, row in df_filtered.iterrows():
+        for _, row in df_filtered.iterrows():
             print(f"当前行数据: {row}")
-            ip = row[LANG[3]]
-            mac = row[LANG[1]]
+            ip = row[ip_column]
+            mac = row[mac_column]
             self.model.setItem(i, 0, QStandardItem(ip))
             self.model.setItem(i, 1, QStandardItem(mac.replace('-', ':').upper()))
-            i = i + 1
+            i += 1
             IP_LIST.append(ip)
         
         self.pushButton.setEnabled(True)
         print(IP_LIST)
-
-
-        
-    # def update_tab(self, r):
-    #     global IP_LIST
-    #     i = 0
-        
-    #     # 获取符合条件的 IP 和 MAC 地址的 DataFrame
-    #     df_filtered = get_arp_ip_mac()
-        
-    #     # 遍历过滤后的 DataFrame 中的每个元素
-    #     for index, row in df_filtered.iterrows():
-    #         ip = row[LANG[3]]
-    #         mac = row[LANG[1]]
-    #         self.model.setItem(i, 0, QStandardItem(ip))
-    #         self.model.setItem(i, 1, QStandardItem(mac.replace('-', ':').upper()))
-    #         i = i + 1
-    #         IP_LIST.append(ip)
-        
-    #     self.pushButton.setEnabled(True)
-    #     print(IP_LIST)
 
 
     def retranslateUi(self, MainWindow):
