@@ -719,7 +719,7 @@ class Ui_MainWindow(object):
                 if conf[0] == "!":  # 处理要更改的配置
                     type = conf.split("=")[0].split("!")[1].strip()
                     value = conf.split("=")[1]
-                    if type == "manager_passwd":
+                    if type == "manager_passwd":  # 修改密码
                         if self.change_pwd(value) == 1:
                             return
                     if type == "net_ipaddr":
@@ -763,6 +763,7 @@ class Ui_MainWindow(object):
                             CONFIG[i] = f"ew_ipaddr={range_of_ip(ip,'255.255.252.0')[1]}"
                         if type == "net_router":
                             CONFIG[i] = f"net_router={range_of_ip(ip,'255.255.252.0')[0]}"
+            # 使用列表推导式过滤掉 CONFIG 列表中的空字符串
             CONFIG = [i for i in CONFIG if i != '']
             for i, conf in enumerate(CONFIG):  # 给固定配置加前缀cgi -a
                 type = conf.split("=")[0].strip()

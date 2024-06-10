@@ -1,5 +1,5 @@
 rul_enable=true; // Mode test enable [true/false]
-# manager_passwd=admin; // AP web login password
+! manager_passwd=admin; // AP web login password
 
 ew_ipaddr=bricoman-prd.hanshowcloud.net; // ESL-Working IP addresse
 ! ew_port=37121; // ESL-Working port eg (37121)
