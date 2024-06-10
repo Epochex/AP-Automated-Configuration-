@@ -470,18 +470,30 @@ class Ui_MainWindow(object):
 
     def change_pwd(self, value=""):
         global CONFIG
+        # 弹出一个输入对话框，提示用户输入AP登录密码
+        # pwd 是用户输入的密码，ok 是一个布尔值，表示用户是否点击了“确定”按钮
         pwd, ok = QInputDialog.getText(
             self, "Password for admin", "Password(blank for not change): ", QLineEdit.Normal, value)
+        # 如果用户点击了“取消”按钮，ok 为 False，函数返回 1，表示未更改密码
         if not ok:
             return 1
+        # 如果用户输入了新密码
         if pwd:
+            # 在配置列表中添加一项，显示新的密码
             self.config.addItem("New password: " + pwd)
+            # 设置配置列表的文本颜色为红色，提示用户注意
             self.config.setStyleSheet("color: red;")
+        
+        # 如果用户没有输入密码（即密码为空）
         if not pwd:
+            # 在配置列表中添加一项，显示默认密码“admin”
             self.config.addItem("Password: admin")
+            # 设置配置列表的文本颜色为红色，提示用户注意
             self.config.setStyleSheet("color: red;")
+            # 将密码设置为默认值“admin”
             pwd = "admin"
-
+        
+        # 将加密后的密码添加到 CONFIG 全局变量中，生成配置指令
         CONFIG.append(
             f"cgi -a manager_passwd={encrypt_md5(f'admin:need input passwd:{pwd}')}")
 
@@ -496,16 +508,23 @@ class Ui_MainWindow(object):
             self.config.addItem("No IP. Using DHCP")
             self.config.setStyleSheet("color: red;")
             CONFIG.append(f"cgi -a net_dhcp={net_dhcp}")
+        # 如果用户输入了 IP 地址
         if ip:
             net_dhcp = "false"
+            # 检查输入的 IP 地址格式是否正确
             if isIP(ip) == False:
+                # 如果 IP 地址格式不正确，清除配置列表，并添加错误信息
                 self.config.clear()
                 self.config.addItem("Not a IP format")
                 self.config.setStyleSheet("color: red;")
                 return 1
+            # 在配置列表中添加一项，显示输入的 IP 地址
             self.config.addItem("IP address: " + ip)
             self.config.setStyleSheet("color: red;")
+            # 将静态 IP 配置添加到 CONFIG 全局变量中
             CONFIG.append(f"cgi -a net_dhcp={net_dhcp};cgi -a net_ipaddr={ip}")
+        
+        # 返回 DHCP 配置和 IP 地址
         return [net_dhcp, ip]
 
     def change_mask(self, val=""):
