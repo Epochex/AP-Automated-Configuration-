@@ -1,0 +1,16 @@
+rul_enable=true; // Mode test enable [true/false]
+# manager_passwd=admin; // AP web login password
+
+ew_ipaddr=mrbricolage-prd.hanshowcloud.net; // ESL-Working IP addresse mrbricolage-prd.hanshowcloud.net
+ew_port=37022; // ESL-Working port
+ew_ssl=true; // ESL-Working SSL enable [true/false]
+
+# net_dhcp={net_dhcp}; // AP DHCP enable [true/false]
+# net_ipaddr=192.168.240.110-111; // AP IP addresse eg (192.168.240.110-111) (if DHCP enable, ignore) 
+# net_netmask=255.255.255.0; // AP NetMask (if DHCP enable, ignore)
+# net_router=192.168.240.3; // AP Gateway (if DHCP enable, ignore)
+# net_dns1={dns1}; // AP DNS1 (if DHCP enable, ignore)
+# net_dns2={dns2}; // AP DNS2 (if DHCP enable, ignore)
+
+! descript=MR BRICOLAGE PRIVAS AP A; // AP Description eg (LORIOL AP A-Z)
+ew_udp=false; // ESL-Working Auto search enable [true/false]

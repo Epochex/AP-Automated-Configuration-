@@ -1,0 +1,16 @@
+rul_enable=true; // Mode test enable [true/false]
+# manager_passwd=admin; // AP web login password
+
+ew_ipaddr=bricoman-prd.hanshowcloud.net; // ESL-Working IP addresse
+! ew_port=37121; // ESL-Working port eg (37121)
+# ew_ssl={ew_ssl}; // ESL-Working SSL enable [true/false]
+
+net_dhcp=false; // AP DHCP enable [true/false]
+! net_ipaddr=192.168.1.103; // AP IP addresse eg (192.168.1.100-101) (if DHCP enable, ignore) 
+net_netmask=255.255.255.0; // AP NetMask (if DHCP enable, ignore)
+! net_router=192.168.1.1; // AP Gateway eg (192.168.1.1 or 192.168.1.254) (if DHCP enable, ignore)
+net_dns1=8.8.8.8; // AP DNS1 (if DHCP enable, ignore)
+net_dns2=8.8.4.4; // AP DNS2 (if DHCP enable, ignore)
+
+! descript=Bricoman Sens AP D; // AP Description eg (Clermont AP A-Z)
+ew_udp=false; // ESL-Working Auto search enable [true/false]

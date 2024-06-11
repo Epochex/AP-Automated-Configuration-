@@ -1,0 +1,16 @@
+rul_enable=true; // Mode test enable [true/false]
+# manager_passwd=admin; // AP web login password
+
+ew_ipaddr=10.188.84.236; // ESL-Working IP addresse
+ew_port=37021; // ESL-Working port
+# ew_ssl={ew_ssl}; // ESL-Working SSL enable [true/false]
+
+net_dhcp=false; // AP DHCP enable [true/false]
+! net_ipaddr=10.130.232.50; // AP IP addresse eg (10.101.86.3-5) (if DHCP enable, ignore) 
+net_netmask=255.255.252.0; // AP NetMask (if DHCP enable, ignore)
+net_router={gateway}; // AP Gateway (if DHCP enable, ignore)
+# net_dns1={dns1}; // AP DNS1 (if DHCP enable, ignore)
+# net_dns2={dns2}; // AP DNS2 (if DHCP enable, ignore)
+
+! descript=Hyper U Le Pont de Beauviosin AP A; // AP Description eg (Super U Boulogne AP A-Z)
+ew_udp=false; // ESL-Working Auto search enable [true/false]
