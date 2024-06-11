@@ -22,41 +22,57 @@ GRP_CONFIG = "DEFAULT"
 CONFIG = []
 df = ''
 IP_LIST = []
+last_selected_interface = None
+
 
 class InterfaceSelectionDialog(QDialog):
-    def __init__(self, interfaces, parent=None):
+    def __init__(self, interfaces, last_selected_interface, parent=None):
         super().__init__(parent)
-        # 设置对话框窗口标题
         self.setWindowTitle("Select Network Interface")
-        
-        # 创建垂直布局管理器
+
         self.layout = QVBoxLayout(self)
-        
-        # 创建并添加一个标签，用于提示用户选择网络接口
         self.label = QLabel("Please select a network interface:", self)
         self.layout.addWidget(self.label)
         
-        # 创建并添加一个下拉框，里面包含所有可供选择的网络接口
         self.interfaceBox = QComboBox(self)
-        self.interfaceBox.addItems(interfaces)  # 将接口列表添加到下拉框中
-        self.layout.addWidget(self.interfaceBox)
+        added_interfaces = set()  # 用于跟踪已经添加的接口
+
+        for interface in interfaces:
+            if interface not in added_interfaces:
+                if interface == last_selected_interface:
+                    self.interfaceBox.addItem(f"{interface} (choice last time)")
+                else:
+                    self.interfaceBox.addItem(interface)
+                added_interfaces.add(interface)
         
-        # 创建并添加对话框按钮框，包含“确定”和“取消”按钮
+        if last_selected_interface:
+            index = self.interfaceBox.findText(f"{last_selected_interface} (choice last time)")
+            if index == -1:
+                index = self.interfaceBox.findText(last_selected_interface)
+            self.interfaceBox.setCurrentIndex(index if index != -1 else 0)
+        elif interfaces:
+            self.interfaceBox.setCurrentIndex(0)
+
+        self.layout.addWidget(self.interfaceBox)
+
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.layout.addWidget(self.buttonBox)
         
-        # 连接“确定”按钮的点击事件到对话框的 accept() 方法
         self.buttonBox.accepted.connect(self.accept)
-        # 连接“取消”按钮的点击事件到对话框的 reject() 方法
         self.buttonBox.rejected.connect(self.reject)
 
-    # 获取当前选中的网络接口
     def getSelectedInterface(self):
-        return self.interfaceBox.currentText()
+        text = self.interfaceBox.currentText()
+        return text.replace(" (choice last time)", "").strip()
+
 
     
 
 class Ui_MainWindow(object):
+
+    def __init__(self):
+        self.last_selected_interface = self.load_last_selected_interface()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("Hanshow AP Config Toolbox")
         MainWindow.resize(900, 650)
@@ -157,36 +173,48 @@ class Ui_MainWindow(object):
         self.show_interface_selection_dialog()
         
 
+    def load_last_selected_interface(self):
+        try:
+            with open('last_selected_interface.txt', 'r') as file:
+                return file.read().strip()
+        except FileNotFoundError:
+            return None
+
+    def save_last_selected_interface(self, interface):
+        with open('last_selected_interface.txt', 'w') as file:
+            file.write(interface)
+
+
     def show_interface_selection_dialog(self):
         interfaces = get_network_interfaces()
-        dialog = InterfaceSelectionDialog(interfaces)
+        if not interfaces:
+            QMessageBox.critical(None, "Error", "No network interfaces found!")
+            sys.exit()
+
+        # 更新 last_selected_interface 为 self.selected_interface
+        if hasattr(self, 'selected_interface'):
+            self.last_selected_interface = self.selected_interface
+
+        # dialog = InterfaceSelectionDialog(interfaces)  # 这里不再传递字符串作为父类参数
+
+         # 传递 last_selected_interface 参数给 InterfaceSelectionDialog
+        dialog = InterfaceSelectionDialog(interfaces, self.last_selected_interface)
         if dialog.exec_() == QDialog.Accepted:
             self.selected_interface = dialog.getSelectedInterface()
+            self.save_last_selected_interface(self.selected_interface)
             print(f"Selected interface: {self.selected_interface}")
         else:
             sys.exit()
-            
+
+
     def slotAdd(self):
         self.pushButton.setEnabled(False)
         self.getAP = GetApTheard(self.selected_interface)
         self.getAP._sum.connect(self.update_tab)
         self.getAP.start()
-        global VPN
-        if VPN:
-            VPN = False
-            self.msgBox.setIcon(QMessageBox.Warning)
-            self.msgBox.setText("Please disable all your VPN connections!")
-            self.msgBox.setWindowTitle("Error")
-            self.msgBox.setWindowIcon(QIcon('style/icon.ico'))
-            self.msgBox.setStandardButtons(QMessageBox.Ok)
-            returnValue = self.msgBox.exec()
-            if returnValue == QMessageBox.Ok:
-                return
-
         
     
 
-    #事件触发
     def processtrigger(self, action):
         # 处理用户触发的不同操作的函数
         if action.text() == "Detail":
@@ -455,6 +483,11 @@ class Ui_MainWindow(object):
         
         self.pushButton.setEnabled(True)
         print(IP_LIST)
+
+        # 输出IP和MAC地址，使用Tab分隔,
+        print("\n以下为当前所有AP的IP和MAC，请及时记录到Excel表中，防止背黑锅 : ) \nThe following are the current IPs and MACs of all APs, please record them in an Excel sheet in time to prevent backstabbing XD ")
+        for ip, mac in zip(df_filtered[ip_column], df_filtered[mac_column]):
+            print(f"{ip}\t{mac.replace('-', ':').upper()}")
 
 
     def retranslateUi(self, MainWindow):
