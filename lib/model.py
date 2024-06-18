@@ -31,12 +31,13 @@ ONLINE = []
 #     else:
 #         print("Failed to clear ARP cache.")
 # 用 netsh 命令来清除 ARP 缓存,有出现过好几次arp参数错误
+
 def clear_arp_cache():
     result = os.system('netsh interface ip delete arpcache')
     if result == 0:
         print("ARP cache has been cleared.")
     else:
-        print("Failed to clear ARP cache.")
+        print("Failed to clear ARP cache. \n Check that you are using a PowerShell(administrator) to start the script")
 
 
 
@@ -122,7 +123,7 @@ def get_arp_ip_mac():
         df_pretraite = pd.read_csv(res, sep=" {2,}", names=header, header=None, engine='python')
     
     # Filter MAC addresses starting with b0-
-    df = df_pretraite[df_pretraite[LANG[1]].str.startswith("b0-")].reset_index(drop=True)
+    df = df_pretraite[df_pretraite[LANG[1]].str.startswith("98-")].reset_index(drop=True)
     print(f"first filtred: {df}")
     return df
 

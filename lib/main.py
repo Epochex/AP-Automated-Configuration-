@@ -6,7 +6,7 @@
 
 from PyQt5.QtCore import QRect, QCoreApplication, QMetaObject, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QWidget, QTableView, QPushButton, QComboBox, QLabel, QListWidget, QMenuBar, QStatusBar, QAction, QHeaderView, QAbstractItemView, QTableView, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout, QDialogButtonBox, QDialog, QApplication,QMainWindow,QTableWidget, QTableWidgetItem, QCheckBox
+from PyQt5.QtWidgets import QWidget, QTableView, QPushButton, QComboBox, QLabel,QHBoxLayout, QListWidget, QMenuBar, QStatusBar, QAction, QHeaderView, QAbstractItemView, QTableView, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout, QDialogButtonBox, QDialog, QApplication,QMainWindow,QTableWidget, QTableWidgetItem, QCheckBox
 import paramiko
 import sys
 import os
@@ -73,6 +73,7 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.last_selected_interface = self.load_last_selected_interface()
 
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("Hanshow AP Config Toolbox")
         MainWindow.resize(900, 650)
@@ -88,17 +89,9 @@ class Ui_MainWindow(object):
         self.tableWidget = QTableWidget(self.centralwidget)
         self.tableWidget.setGeometry(QRect(30, 20, 511, 560))
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(3)
-        self.tableWidget.setHorizontalHeaderLabels(['select', 'IP addr', 'MAC addr'])
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)  # 设置列宽度自适应内容
-        self.tableWidget.setColumnWidth(0, 30)  # 设置第一列宽度为50
-        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)  # 第二列自适应宽度
-        self.tableWidget.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)  # 第三列自适应宽度
-        
-        # 设置列宽
-        self.tableWidget.setColumnWidth(0, 30)  # 第一列宽度为50
-        self.tableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.tableWidget.setColumnCount(2)  # 设置列数为2
+        self.tableWidget.setHorizontalHeaderLabels(['IP addr', 'MAC addr'])
+        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)  # 设置列宽度自适应内容
         
         # 按钮
         self.pushButton = QPushButton(self.centralwidget)
@@ -183,12 +176,16 @@ class Ui_MainWindow(object):
 
 
 
-        
 
+
+
+        
+    
+    # 加载并记录上次你选的网络接口
     def load_last_selected_interface(self):
         try:
             with open('last_selected_interface.txt', 'r') as file:
-                return file.read().strip()
+                return file.read().strip() 
         except FileNotFoundError:
             return None
 
@@ -490,11 +487,23 @@ class Ui_MainWindow(object):
             ip = row[ip_column]
             mac = row[mac_column]
 
-            # 创建复选框并添加到表格中
+            # 创建复选框
             checkbox = QCheckBox()
-            self.tableWidget.setCellWidget(i, 0, checkbox)
-            self.tableWidget.setItem(i, 1, QTableWidgetItem(ip))
-            self.tableWidget.setItem(i, 2, QTableWidgetItem(mac.replace('-', ':').upper()))
+            
+            # 创建一个水平布局，将复选框和序号放在同一单元格中
+            layout = QWidget()
+            hbox = QHBoxLayout(layout)
+            hbox.setContentsMargins(0, 0, 0, 0)
+            hbox.addWidget(checkbox)
+            #hbox.addWidget(QLabel(str(i + 1)))
+            hbox.addStretch()
+            
+            # 在IP地址前添加空格以确保不重叠
+            ip_with_padding = ' ' * 10 + ip
+            ip_item = QTableWidgetItem(ip_with_padding)
+            self.tableWidget.setItem(i, 0, ip_item)
+            self.tableWidget.setItem(i, 1, QTableWidgetItem(mac.replace('-', ':').upper()))
+            self.tableWidget.setCellWidget(i, 0, layout)
 
             IP_LIST.append(ip)
             i += 1
@@ -507,14 +516,19 @@ class Ui_MainWindow(object):
         for ip, mac in zip(df_filtered[ip_column], df_filtered[mac_column]):
             print(f"{ip}\t{mac.replace('-', ':').upper()}")
 
-
             
     def get_selected_aps(self):
         selected_ips = []
         for i in range(self.tableWidget.rowCount()):
-            if self.tableWidget.cellWidget(i, 0).isChecked():
-                selected_ips.append(self.tableWidget.item(i, 1).text())
-        return selected_ips
+            layout = self.tableWidget.cellWidget(i, 0) 
+            if layout is not None:   # 存在布局
+                checkbox = layout.findChild(QCheckBox)
+                if checkbox is not None and checkbox.isChecked():  #有checkbox而且被点了
+                    selected_ips.append(self.tableWidget.item(i, 0).text().strip())
+        return selected_ips #  返回存储选中的AP的IP地址的列表
+
+
+
 
 
 
@@ -556,41 +570,67 @@ class Ui_MainWindow(object):
         CONFIG.append(
             f"cgi -a manager_passwd={encrypt_md5(f'admin:need input passwd:{pwd}')}")
 
+
     def change_ip(self, ip_add=""):
         global CONFIG
+        # 弹出一个输入对话框，提示用户输入IP地址，默认值为ip_add
         ip, ok = QInputDialog.getText(
             self, "IP 地址", "IP 地址(为空表示使用DHCP): ", QLineEdit.Normal, ip_add)
+        
+        # 如果用户点击了取消按钮，ok为False，函数返回1，表示操作取消
         if not ok:
             return 1
+
+        # 如果用户没有输入IP地址，表示使用DHCP
         if not ip:
             net_dhcp = "true"
             self.config.addItem("No IP. Using DHCP")
             self.config.setStyleSheet("color: red;")
             CONFIG.append(f"cgi -a net_dhcp={net_dhcp}")
         else:
+            # 如果用户输入了IP地址，表示不使用DHCP
             net_dhcp = "false"
+
+            # 如果输入的IP地址包含“-”，表示这是一个IP范围
             if '-' in ip:
-                ip_start, ip_end = ip.split('-')
-                ip_start = ip_start.strip()
-                ip_end = int(ip_end.strip())
-                ip_base = '.'.join(ip_start.split('.')[:-1])
-                ip_last_octet = int(ip_start.split('.')[-1])
-                selected_ips = self.get_selected_aps()
-                if len(selected_ips) != (ip_end - ip_last_octet + 1):
-                    QMessageBox.critical(None, "错误", "选定的AP数量与IP范围不匹配。")
+                try:
+                    # 分割IP范围起始和结束地址
+                    ip_start, ip_end = ip.split('-') # 按照 '-' 分割成两个部分，返回一个包含两个字符串的列表
+                    ip_base = '.'.join(ip_start.split('.')[:-1]) # 按.打散
+                    ip_start_last_octet = int(ip_start.split('.')[-1])  # 获得最后一个八位组然后转化整数
+                    ip_end_last_octet = int(ip_end.strip())  # 去白转
+                    selected_aps = self.get_selected_aps()
+
+                    # 检查选定的AP数量是否与IP范围匹配
+                    if len(selected_aps) != (ip_end_last_octet - ip_start_last_octet + 1):
+                        QMessageBox.critical(None, "错误", "选定的AP数量与IP范围不匹配。")
+                        return 1
+
+                    # 为每个选定的AP分配一个IP地址
+                    for i in range(len(selected_aps)):
+                        CONFIG.append(f"cgi -a net_ipaddr={ip_base}.{ip_start_last_octet + i}")
+                except Exception as e:
+                    # 如果处理IP范围时出错，弹出错误消息并返回1
+                    QMessageBox.critical(None, "错误", f"处理IP范围时出错: {e}")
                     return 1
-                for i, ip in enumerate(selected_ips):
-                    CONFIG.append(f"cgi -a net_ipaddr={ip_base}.{ip_last_octet + i}")
             else:
-                if isIP(ip) == False:
+                # 如果输入的不是IP范围，检查它是否是一个有效的IP地址
+                if not isIP(ip):
                     self.config.clear()
                     self.config.addItem("Not a IP format")
                     self.config.setStyleSheet("color: red;")
                     return 1
+
+                # 如果是有效的IP地址，更新配置列表
                 self.config.addItem("IP address: " + ip)
                 self.config.setStyleSheet("color: red;")
                 CONFIG.append(f"cgi -a net_dhcp={net_dhcp};cgi -a net_ipaddr={ip}")
+        
+        # 返回DHCP状态和IP地址
         return [net_dhcp, ip]
+
+
+
 
 
 
@@ -740,21 +780,28 @@ class Ui_MainWindow(object):
     #         self.config.setStyleSheet("color: red;")
     #         # 使用双引号将描述包含起来
     #         CONFIG.append(f'cgi -a descript="{description}"')
+
+
     def change_descript(self, descript=""):
         global CONFIG
         description, ok = QInputDialog.getText(
-            self, "描述(可选)", "描述(可选)", QLineEdit.Normal, descript)
+            self, "Description(optional)", "Description(optional)", QLineEdit.Normal, descript)
         if not ok:
             return 1
         if '-' in description:
-            prefix, letters = description.split('-')
-            letters = [chr(c) for c in range(ord(letters[0]), ord(letters[-1]) + 1)]
-            selected_aps = self.get_selected_aps()
-            if len(selected_aps) != len(letters):
-                QMessageBox.critical(None, "错误", "选定的AP数量与描述范围不匹配。")
+            try:
+                prefix, range_part = description.rsplit(' ', 1)
+                start_letter, end_letter = range_part.split('-')
+                letters = [chr(c) for c in range(ord(start_letter), ord(end_letter) + 1)]
+                selected_aps = self.get_selected_aps()
+                if len(selected_aps) != len(letters):
+                    QMessageBox.critical(None, "错误", "选定的AP数量与描述范围不匹配。")
+                    return 1
+                for i, desc in enumerate(selected_aps):
+                    CONFIG.append(f'cgi -a descript="{prefix} {letters[i]}"')
+            except Exception as e:
+                QMessageBox.critical(None, "错误", f"处理描述范围时出错: {e}")
                 return 1
-            for i, desc in enumerate(selected_aps):
-                CONFIG.append(f'cgi -a descript="{prefix} {letters[i]}"')
         else:
             if not description:
                 self.config.addItem("Description: None")
@@ -763,6 +810,8 @@ class Ui_MainWindow(object):
                 self.config.addItem("Description: " + description)
                 self.config.setStyleSheet("color: red;")
                 CONFIG.append(f'cgi -a descript="{description}"')
+
+
 
 
 
@@ -895,16 +944,21 @@ class Ui_MainWindow(object):
                 command = ';'.join(CONFIG)+";sync;cgi -e;"
             print(command)
         
-        ip = ap_ip
-        print(ip)
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            ssh.connect(ip, username="root", password="hanshow-imx6")
-            ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
-            print(ssh_stdout.read().decode('utf-8'))
-        except:
-            print("Error when connect to : ", ip)
+        # 分别处理每个选中的AP
+        selected_aps = self.get_selected_aps()
+        for i, ip in enumerate(selected_aps):
+            ip = ip.replace(" ", "")  # 去掉IP地址中的所有空格
+            print(f"Connecting to IP: '{ip}'")  # 输出调试信息
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            try:
+                ssh.connect(ip, username="root", password="hanshow-imx6")
+                ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command[i])
+                print(ssh_stdout.read().decode('utf-8'))
+            except Exception as e:
+                print(f"Error when connecting to {ip}: {e}")
+
+
 
 
 
