@@ -1,4 +1,5 @@
-# 汉朔接入点自动化配置软件 Hanshow AP Automation Configuration Software
+# 汉朔接入点自动化配置软件   
+Hanshow AP Automation Configuration Software
 
 ## 项目概述
 用于配置和管理 AP 网络的工具。该工具使用 PyQt5 构建图形用户界面，提供了对 AP 网络的自动搜索和配置功能。
