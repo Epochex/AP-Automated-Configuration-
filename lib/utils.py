@@ -91,36 +91,33 @@ def range_of_ip(ip, submask):
 
 def get_config():
     path = "config" #文件夹目录
-    files= os.listdir(path) #得到文件夹下的所有文件名称
-    # for file in files: #遍历文件夹
-    #      if not os.path.isdir(file): #判断是否是文件夹，不是文件夹才打开
-    #           f = open(path+"/"+file); #打开文件
-    #           iter_f = iter(f); #创建迭代器
-    #           str = ""
-    #           for line in iter_f: #遍历文件，一行行遍历，读取文本
-    #               str = str + line
-    #           s.append(str) #每个文件的文本存到list中
+    try:
+        files= os.listdir(path) #得到文件夹下的所有文件名称
+    except FileNotFoundError as e:
+        print(e)
+        os.mkdir(path)
+        files = []
     return files
 
 def get_file_config(file):
-    data = []  # 初始化一个空列表用于存储处理后的数据
-    with open(file, 'r', encoding='utf-8') as f:  # 打开文件，以读取模式和utf-8编码
-        lines_unhandled = f.readlines()  # 读取文件的所有行，并返回一个列表，每行作为列表中的一个元素
-        lines_unhandled = [x.strip() for x in lines_unhandled]  # 去除每行的前后空白字符
-        lines = list(set(lines_unhandled))  # 去除重复行
-        lines.sort()  # 对行进行排序
-        lines.remove('')  # 移除空行
-        print(lines)  # 输出处理后的行，供调试使用
-        if lines:  # 如果处理后的行列表不为空
-            for line in lines:  # 遍历每一行
-                line = line.strip()  # 去除每行的前后空白字符
-                # 忽略以 "#" 开头的行，或者包含 "=;"、"= ;"、"=  ;" 的行
+    data = []
+    with open(file,'r',encoding='utf-8') as f:
+        lines_unhandled = f.readlines()
+        lines_unhandled = [x.strip() for x in lines_unhandled]
+        lines = list(set(lines_unhandled))
+        lines.sort()
+        try:
+            lines.remove('')
+        except Exception as e:
+            print(e)
+        print(lines)
+        if lines:
+            for line in lines:
+                line = line.strip()
                 if line[0] == "#" or "=;" in line or "= ;" in line or "=  ;" in line:
                     continue
-                line = line.split(';')[0]  # 按照分号分割行，并取第一部分
-                if "descript" not in line:  # 如果行中不包含 "descript" 字符串
-                    line = ''.join(line.split())  # 移除行中的所有空白字符
-                # 对单引号进行转义处理，将单引号替换为反斜杠加单引号
-                line = line.replace("'", "\\'")
-                data.append(line)  # 将处理后的行添加到数据列表中
-    return data  # 返回处理后的数据列表
+                line = line.split(';')[0]
+                if "descript" not in line:
+                    line = ''.join(line.split())
+                data.append(line)
+    return data
