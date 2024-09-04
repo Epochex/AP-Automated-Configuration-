@@ -268,8 +268,8 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Get All AP"))
 
         self.alert.setText(_translate(
-            "MainWindow", "Contact Boyuan if you have any questions"))
-        self.alert.setStyleSheet("color: red;")
+            "MainWindow", "Contact crayozakka@gmail.com if you have any questions"))
+        self.alert.setStyleSheet("color: blue;")
 
     def change_pwd(self, value=""):
         global CONFIG
